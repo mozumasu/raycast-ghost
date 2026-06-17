@@ -1,0 +1,71 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "ghost",
+  "title": "Ghost Process Manager",
+  "description": "ghost（バックグラウンドプロセスマネージャ）のプロセスを一覧・起動・停止し、監視対象の状態をメニューバーに表示する",
+  "icon": "extension-icon.png",
+  "author": "mozumasu",
+  "categories": ["Developer Tools"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "manage",
+      "title": "Manage Processes",
+      "subtitle": "Ghost",
+      "description": "ghost のバックグラウンドプロセスを一覧・停止・ログ確認する",
+      "mode": "view"
+    },
+    {
+      "name": "status",
+      "title": "Server Status",
+      "description": "監視対象プロセスの稼働状態をメニューバーに表示し、起動/停止する",
+      "mode": "menu-bar",
+      "interval": "1m"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "ghostPath",
+      "type": "textfield",
+      "required": false,
+      "title": "Ghost Binary Path",
+      "description": "ghost バイナリのパス（空欄なら自動検出）",
+      "default": ""
+    },
+    {
+      "name": "watchCommand",
+      "type": "textfield",
+      "required": false,
+      "title": "Watch Command",
+      "description": "メニューバーで監視するプロセスのコマンド部分一致文字列（例: plamo-translate server）。30文字以内推奨（ghost list は長いコマンドを省略表示するため）",
+      "default": "plamo-translate server"
+    },
+    {
+      "name": "startCommand",
+      "type": "textfield",
+      "required": false,
+      "title": "Start Command",
+      "description": "Start 実行時に ghost run で起動するコマンド（例: plamo-translate server）",
+      "default": "plamo-translate server"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.80.0",
+    "@raycast/utils": "^1.16.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.0.4",
+    "@types/node": "22.19.17",
+    "@types/react": "19.0.10",
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix",
+    "publish": "ray publish"
+  }
+}

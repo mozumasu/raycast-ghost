@@ -1,0 +1,14 @@
+# Raycast specific files
+raycast-env.d.ts
+.raycast-swift-build
+.swiftpm
+compiled.entitlements
+
+# Node modules
+node_modules
+
+# Build output
+dist
+
+# Misc
+.DS_Store
