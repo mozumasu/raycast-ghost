@@ -19,6 +19,7 @@ import {
   cleanupFinished,
   getLog,
   listTasks,
+  restartTask,
   stopTask,
 } from "./ghost";
 
@@ -100,6 +101,17 @@ export default function Command() {
     }
   }
 
+  async function handleRestart(task: Task) {
+    await showToast({ style: Toast.Style.Animated, title: `再起動中: ${task.command}` });
+    try {
+      await restartTask(task);
+      await showToast({ style: Toast.Style.Success, title: "再起動しました" });
+      await load();
+    } catch (e) {
+      await showToast({ style: Toast.Style.Failure, title: "再起動に失敗しました", message: String(e) });
+    }
+  }
+
   async function handleCleanup() {
     const ok = await confirmAlert({
       title: "終了済みタスクを削除しますか？",
@@ -143,6 +155,12 @@ export default function Command() {
             <ActionPanel>
               <ActionPanel.Section>
                 <Action.Push title="ログを表示" icon={Icon.Text} target={<LogView task={task} />} />
+                <Action
+                  title="再起動"
+                  icon={Icon.RotateClockwise}
+                  shortcut={{ modifiers: ["cmd"], key: "return" }}
+                  onAction={() => handleRestart(task)}
+                />
                 {task.status === "running" && (
                   <Action
                     title="停止 (SIGTERM)"

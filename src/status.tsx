@@ -8,7 +8,7 @@ import {
   showHUD,
 } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { Task, findWatched, getPrefs, listTasks, runCommand, stopTask } from "./ghost";
+import { Task, findWatched, getPrefs, listTasks, restartTask, runCommand, stopTask } from "./ghost";
 
 interface WatchData {
   watched?: Task;
@@ -71,6 +71,18 @@ export default function Command() {
     }
   }
 
+  async function handleRestart() {
+    const task = data?.watched;
+    if (!task) return;
+    try {
+      await restartTask(task);
+      await showHUD("🔄 再起動しました");
+      revalidate();
+    } catch (e) {
+      await showHUD(`再起動に失敗しました: ${String(e)}`);
+    }
+  }
+
   return (
     <MenuBarExtra icon={icon} title={title} tooltip={tooltip} isLoading={isLoading}>
       {data?.hasWatch ? (
@@ -100,6 +112,13 @@ export default function Command() {
             icon={{ source: Icon.Stop, tintColor: Color.Red }}
             title="Stop Server"
             onAction={handleStop}
+          />
+        )}
+        {running && (
+          <MenuBarExtra.Item
+            icon={Icon.RotateClockwise}
+            title="Restart Server"
+            onAction={handleRestart}
           />
         )}
         <MenuBarExtra.Item

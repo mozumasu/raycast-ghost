@@ -121,10 +121,13 @@ export async function listTasks(statusFilter?: TaskStatus): Promise<Task[]> {
   return parseList(await ghost(args));
 }
 
-export async function runCommand(command: string): Promise<void> {
+export async function runCommand(command: string, cwd?: string): Promise<void> {
   const parts = command.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) throw new Error("Start Command が空です");
-  await ghost(["run", ...parts]);
+  const args = ["run"];
+  if (cwd) args.push("--cwd", cwd);
+  args.push(...parts);
+  await ghost(args);
 }
 
 export async function stopTask(id: string, force = false): Promise<void> {
@@ -139,6 +142,15 @@ export async function getLog(id: string): Promise<string> {
 
 export async function cleanupFinished(): Promise<void> {
   await ghost(["cleanup"]);
+}
+
+// ghost に restart は無いため、停止（実行中なら）してから同じ command と
+// 作業ディレクトリで再実行する。
+export async function restartTask(task: Task): Promise<void> {
+  if (task.status === "running") {
+    await stopTask(task.id);
+  }
+  await runCommand(task.command, task.directory);
 }
 
 // Prefer a running match; fall back to the most recent matching task.
