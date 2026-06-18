@@ -140,8 +140,10 @@ export async function getLog(id: string): Promise<string> {
   return ghost(["log", id]);
 }
 
+// --all で経過日数に関わらず終了済み（exited/killed）をすべて削除する。
+// 既定の ghost cleanup は 30 日以上前のみ対象のため、最近の終了タスクが残る。
 export async function cleanupFinished(): Promise<void> {
-  await ghost(["cleanup"]);
+  await ghost(["cleanup", "--all"]);
 }
 
 // ghost に restart は無いため、停止（実行中なら）してから同じ command と
