@@ -137,6 +137,7 @@ export default function Command() {
                   title="停止 (SIGTERM)"
                   icon={Icon.Stop}
                   style={Action.Style.Destructive}
+                  shortcut={{ modifiers: ["ctrl"], key: "c" }}
                   onAction={() => handleStop(task, false)}
                 />
                 <Action
