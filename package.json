@@ -16,6 +16,13 @@
       "mode": "view"
     },
     {
+      "name": "running",
+      "title": "Running Processes",
+      "description": "ghost で起動中のプロセスだけを一覧表示する",
+      "mode": "view",
+      "icon": "running-icon.svg"
+    },
+    {
       "name": "status",
       "title": "Server Status",
       "description": "監視対象プロセスの稼働状態をメニューバーに表示し、起動/停止する",

@@ -2,39 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Action,
   ActionPanel,
-  Alert,
   Color,
-  confirmAlert,
   Detail,
   Icon,
-  Image,
   Keyboard,
   List,
   showToast,
   Toast,
+  updateCommandMetadata,
 } from "@raycast/api";
-import {
-  Task,
-  TaskStatus,
-  cleanupFinished,
-  getLog,
-  listTasks,
-  restartTask,
-  stopTask,
-} from "./ghost";
-
-function statusIcon(status: TaskStatus): Image.ImageLike {
-  switch (status) {
-    case "running":
-      return { source: Icon.CircleFilled, tintColor: Color.Green };
-    case "exited":
-      return { source: Icon.CircleFilled, tintColor: Color.SecondaryText };
-    case "killed":
-      return { source: Icon.CircleFilled, tintColor: Color.Red };
-    default:
-      return { source: Icon.Circle, tintColor: Color.SecondaryText };
-  }
-}
+import { Task, getLog, listTasks, restartTask, stopTask } from "./ghost";
 
 function LogView({ task }: { task: Task }) {
   const [log, setLog] = useState<string>("");
@@ -68,12 +45,11 @@ function LogView({ task }: { task: Task }) {
 export default function Command() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [runningOnly, setRunningOnly] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const t = await listTasks(runningOnly ? "running" : undefined);
+      const t = await listTasks("running");
       setTasks(t);
     } catch (e) {
       await showToast({
@@ -84,10 +60,13 @@ export default function Command() {
     } finally {
       setIsLoading(false);
     }
-  }, [runningOnly]);
+  }, []);
 
   useEffect(() => {
     load();
+    // 過去に updateCommandMetadata でセットされた動的 subtitle を消す
+    // （古い情報が Root Search に残ると誤解を招くため）
+    updateCommandMetadata({ subtitle: null }).catch(() => {});
   }, [load]);
 
   async function handleStop(task: Task, force: boolean) {
@@ -126,60 +105,20 @@ export default function Command() {
     }
   }
 
-  async function handleCleanup() {
-    const ok = await confirmAlert({
-      title: "終了済みタスクを削除しますか？",
-      message: "ghost cleanup を実行します（exited / killed が対象）",
-      primaryAction: { title: "削除", style: Alert.ActionStyle.Destructive },
-    });
-    if (!ok) return;
-    try {
-      await cleanupFinished();
-      await showToast({
-        style: Toast.Style.Success,
-        title: "クリーンアップしました",
-      });
-      await load();
-    } catch (e) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "クリーンアップに失敗しました",
-        message: String(e),
-      });
-    }
-  }
-
-  const runningCount = tasks.filter((t) => t.status === "running").length;
-
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder="プロセスを検索"
-      navigationTitle={`Ghost — ${runningCount} running`}
+      searchBarPlaceholder="起動中プロセスを検索"
+      navigationTitle={`Ghost — ${tasks.length} running`}
     >
-      <List.EmptyView
-        icon={Icon.Power}
-        title={
-          runningOnly ? "実行中のプロセスはありません" : "プロセスがありません"
-        }
-      />
+      <List.EmptyView icon={Icon.Power} title="起動中のプロセスはありません" />
       {tasks.map((task) => (
         <List.Item
           key={task.id}
-          icon={statusIcon(task.status)}
+          icon={{ source: Icon.CircleFilled, tintColor: Color.Green }}
           title={task.command}
           subtitle={task.directory}
-          accessories={[
-            {
-              tag: {
-                value: task.status,
-                color:
-                  task.status === "running" ? Color.Green : Color.SecondaryText,
-              },
-            },
-            { text: `PID ${task.pid}` },
-            { text: task.started },
-          ]}
+          accessories={[{ text: `PID ${task.pid}` }, { text: task.started }]}
           actions={
             <ActionPanel>
               <ActionPanel.Section>
@@ -194,23 +133,19 @@ export default function Command() {
                   shortcut={{ modifiers: ["cmd"], key: "return" }}
                   onAction={() => handleRestart(task)}
                 />
-                {task.status === "running" && (
-                  <Action
-                    title="停止 (SIGTERM)"
-                    icon={Icon.Stop}
-                    style={Action.Style.Destructive}
-                    onAction={() => handleStop(task, false)}
-                  />
-                )}
-                {task.status === "running" && (
-                  <Action
-                    title="強制停止 (SIGKILL)"
-                    icon={Icon.XMarkCircle}
-                    style={Action.Style.Destructive}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "x" }}
-                    onAction={() => handleStop(task, true)}
-                  />
-                )}
+                <Action
+                  title="停止 (SIGTERM)"
+                  icon={Icon.Stop}
+                  style={Action.Style.Destructive}
+                  onAction={() => handleStop(task, false)}
+                />
+                <Action
+                  title="強制停止 (SIGKILL)"
+                  icon={Icon.XMarkCircle}
+                  style={Action.Style.Destructive}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "x" }}
+                  onAction={() => handleStop(task, true)}
+                />
               </ActionPanel.Section>
               <ActionPanel.Section>
                 <Action.CopyToClipboard
@@ -229,19 +164,6 @@ export default function Command() {
                   icon={Icon.ArrowClockwise}
                   shortcut={Keyboard.Shortcut.Common.Refresh}
                   onAction={load}
-                />
-                <Action
-                  title={runningOnly ? "すべて表示" : "実行中のみ表示"}
-                  icon={Icon.Filter}
-                  shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
-                  onAction={() => setRunningOnly((v) => !v)}
-                />
-                <Action
-                  title="終了済みを削除 (cleanup)"
-                  icon={Icon.Trash}
-                  style={Action.Style.Destructive}
-                  shortcut={{ modifiers: ["cmd"], key: "backspace" }}
-                  onAction={handleCleanup}
                 />
               </ActionPanel.Section>
             </ActionPanel>

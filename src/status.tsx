@@ -8,7 +8,15 @@ import {
   showHUD,
 } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { Task, findWatched, getPrefs, listTasks, restartTask, runCommand, stopTask } from "./ghost";
+import {
+  Task,
+  findWatched,
+  getPrefs,
+  listTasks,
+  restartTask,
+  runCommand,
+  stopTask,
+} from "./ghost";
 
 interface WatchData {
   watched?: Task;
@@ -21,14 +29,16 @@ export default function Command() {
   const watch = (watchCommand ?? "").trim();
   const start = (startCommand ?? "").trim();
 
-  const { data, isLoading, revalidate } = useCachedPromise(async (): Promise<WatchData> => {
-    const tasks = await listTasks();
-    return {
-      watched: watch ? findWatched(tasks, watch) : undefined,
-      runningCount: tasks.filter((t) => t.status === "running").length,
-      hasWatch: watch.length > 0,
-    };
-  });
+  const { data, isLoading, revalidate } = useCachedPromise(
+    async (): Promise<WatchData> => {
+      const tasks = await listTasks();
+      return {
+        watched: watch ? findWatched(tasks, watch) : undefined,
+        runningCount: tasks.filter((t) => t.status === "running").length,
+        hasWatch: watch.length > 0,
+      };
+    },
+  );
 
   const running = data?.watched?.status === "running";
 
@@ -38,7 +48,11 @@ export default function Command() {
     : { source: Icon.Circle, tintColor: Color.SecondaryText };
 
   // Without a watch target, fall back to showing the running task count.
-  const title = data?.hasWatch ? undefined : data ? String(data.runningCount) : undefined;
+  const title = data?.hasWatch
+    ? undefined
+    : data
+      ? String(data.runningCount)
+      : undefined;
 
   const tooltip = data?.hasWatch
     ? `${watch}: ${running ? "running" : "stopped"}`
@@ -84,18 +98,30 @@ export default function Command() {
   }
 
   return (
-    <MenuBarExtra icon={icon} title={title} tooltip={tooltip} isLoading={isLoading}>
+    <MenuBarExtra
+      icon={icon}
+      title={title}
+      tooltip={tooltip}
+      isLoading={isLoading}
+    >
       {data?.hasWatch ? (
         <MenuBarExtra.Section title={watch}>
           <MenuBarExtra.Item
-            icon={running ? { source: Icon.CircleFilled, tintColor: Color.Green } : { source: Icon.Circle, tintColor: Color.SecondaryText }}
+            icon={
+              running
+                ? { source: Icon.CircleFilled, tintColor: Color.Green }
+                : { source: Icon.Circle, tintColor: Color.SecondaryText }
+            }
             title={running ? "Server: Running" : "Server: Stopped"}
             subtitle={data?.watched ? `PID ${data.watched.pid}` : undefined}
           />
         </MenuBarExtra.Section>
       ) : (
         <MenuBarExtra.Section>
-          <MenuBarExtra.Item icon={Icon.Dot} title={`${data?.runningCount ?? 0} running`} />
+          <MenuBarExtra.Item
+            icon={Icon.Dot}
+            title={`${data?.runningCount ?? 0} running`}
+          />
         </MenuBarExtra.Section>
       )}
 
@@ -132,7 +158,9 @@ export default function Command() {
         <MenuBarExtra.Item
           icon={Icon.List}
           title="Manage Processes…"
-          onAction={() => launchCommand({ name: "manage", type: LaunchType.UserInitiated })}
+          onAction={() =>
+            launchCommand({ name: "manage", type: LaunchType.UserInitiated })
+          }
         />
         <MenuBarExtra.Item
           icon={Icon.Gear}

@@ -82,7 +82,9 @@ export function parseList(out: string): Task[] {
   const lines = out.split("\n").filter((l) => l.trim().length > 0);
   if (lines.length === 0) return [];
 
-  const headerIdx = lines.findIndex((l) => l.includes("Task ID") && l.includes("Status"));
+  const headerIdx = lines.findIndex(
+    (l) => l.includes("Task ID") && l.includes("Status"),
+  );
   if (headerIdx === -1) return [];
   const header = lines[headerIdx];
 
